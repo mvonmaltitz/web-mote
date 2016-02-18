@@ -28,7 +28,7 @@ class Play(tornado.web.RequestHandler):
         ServerStatus.newList([util.nameToTitle(f) for f in fileList])
         [player.playQ.put(f) for f in fileList]
 
-class ServerStatus(sse.FeedHandler): 
+class ServerStatus(sse.FeedHandler):
     _msg_timeout = None
 
 class Command(tornado.web.RequestHandler):
@@ -54,5 +54,5 @@ settings = {
 app = tornado.web.Application(urls, **settings)
 
 if __name__ == "__main__":
-    app.listen(httpport)
+    app.listen(conf.httpport)
     tornado.ioloop.IOLoop.instance().start()
