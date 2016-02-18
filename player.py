@@ -12,13 +12,18 @@ defaultPlayer = ["mplayer"]
 
 ### If `omxplayer` is available, use it for `mp4`s and `ogv`s (with audio output to the HDMI port)
 ### If not, use the default player for everything
+playerTable = {
+        'm3u': ["mplayer", "-playlist"],
+        'pls': ["mplayer", "-playlist"]
+        }
 try:
     call(["omxplayer"])
-    playerTable = { 
-        'mp4': ["omxplayer", "-o", "hdmi"], 
-        'ogv': ["omxplayer", "-o", "hdmi"] }
+    playerTable.update({
+        'mp4': ["omxplayer", "-o", "hdmi"],
+        'ogv': ["omxplayer", "-o", "hdmi"],
+        })
 except:
-    playerTable = {}
+    pass
 
 commandTable = {
     'mplayer':
@@ -29,7 +34,7 @@ commandTable = {
     'omxplayer':
         {'step-backward': "\x1B[B", 'backward': "\x1B[D", 'forward': "\x1B[C", 'step-forward': "\x1B[A",
          'volume-off': " ", #oxmplayer doesn't have a mute, so we pause instead
-         'volume-down': "+", 'volume-up': "-", 
+         'volume-down': "+", 'volume-up': "-",
          'stop': "q", 'pause': " ", 'play': " "}
     }
 ### END THE MASSIVE CONFIG
