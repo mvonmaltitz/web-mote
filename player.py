@@ -1,7 +1,9 @@
 from subprocess import Popen, PIPE, call
 from threading import Thread
 from Queue import Queue
+from Queue import Empty
 import os
+from os.path import abspath, dirname, join
 import util, conf
 from main import ServerStatus
 
@@ -12,9 +14,11 @@ defaultPlayer = ["mplayer"]
 
 ### If `omxplayer` is available, use it for `mp4`s and `ogv`s (with audio output to the HDMI port)
 ### If not, use the default player for everything
+play_youtube = abspath(join(dirname(__file__), 'play_youtube.sh'))
 playerTable = {
         'm3u': ["mplayer", "-playlist"],
-        'pls': ["mplayer", "-playlist"]
+        'pls': ["mplayer", "-playlist"],
+        'youtube': [play_youtube]
         }
 try:
     call(["omxplayer"])
@@ -26,6 +30,11 @@ except:
     pass
 
 commandTable = {
+    play_youtube:
+        {'step-backward': "\x1B[B", 'backward': "\x1B[D", 'forward': "\x1B[C", 'step-forward': "\x1B[A",
+         ## down | left | right | up
+         'volume-down': "9", 'volume-off': "m", 'volume-up': "0",
+         'stop': "q", 'pause': " ", 'play': " "},
     'mplayer':
         {'step-backward': "\x1B[B", 'backward': "\x1B[D", 'forward': "\x1B[C", 'step-forward': "\x1B[A",
          ## down | left | right | up
@@ -54,6 +63,12 @@ def listen():
             playerCmd = __getPlayerCommand(aFile)
             cmdTable = commandTable[playerCmd[0]]
             playFile(playerCmd, aFile, cmdTable)
+        elif(aFile.startswith("http")):
+            ServerStatus.send(aFile, event='playing')
+            playerCmd =  playerTable.get("youtube", defaultPlayer)
+            cmdTable = commandTable[playerCmd[0]]
+            playFile(playerCmd, aFile, cmdTable)
+
 
 def playFile(playerCmd, fileName, cmdTable):
     __clearQueue(commandQueue)
@@ -63,11 +78,14 @@ def playFile(playerCmd, fileName, cmdTable):
             res = commandQueue.get(timeout=1)
             activePlayer.stdin.write(cmdTable[res])
             if unicode(res) == unicode("stop"):
-                ServerStatus.send(util.nameToTitle(fileName), event="stopped")
+                try:
+                  ServerStatus.send(util.nameToTitle(fileName), event="stopped")
+                except:
+                  pass
                 __clearQueue(playQ)
                 activePlayer.terminate()
                 return False
-        except:
+        except Empty:
             None
     ServerStatus.send(util.nameToTitle(fileName), event="finished")
     return True

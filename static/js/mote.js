@@ -33,6 +33,14 @@ function FileListCtrl ($scope, $http, $location) {
     }
 };
 
+function URLInputCtrl ($scope, $http, $location) {
+    $scope.play = function () {
+      console.log($scope.url);
+	$http.post("/play", {}, {params: {target: [$scope.url]}});
+    }
+
+};
+
 function CommandCtrl ($scope, $http) {
 // older versions of safari don't like `position: fixed`.
 // they also don't like when you set `position: fixed` in a stylesheet then override with inline styles.
